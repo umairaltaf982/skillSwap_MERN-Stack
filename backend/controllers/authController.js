@@ -12,7 +12,7 @@ exports.register = async (req, res, next) => {
 
     // Create user based on role
     let user;
-    
+
     if (role === 'client') {
       user = await Client.create({
         name,
@@ -24,14 +24,14 @@ exports.register = async (req, res, next) => {
     } else if (role === 'freelancer') {
       // For freelancers, we need skills
       const { skills } = req.body;
-      
+
       if (!skills || !Array.isArray(skills) || skills.length === 0) {
         return res.status(400).json({
           success: false,
           error: 'Please provide at least one skill'
         });
       }
-      
+
       user = await Freelancer.create({
         name,
         email,
@@ -49,7 +49,7 @@ exports.register = async (req, res, next) => {
 
     // Generate verification token
     const verificationToken = user.getVerificationToken();
-    
+
     await user.save({ validateBeforeSave: false });
 
     // Create verification URL
@@ -70,10 +70,12 @@ exports.register = async (req, res, next) => {
 // @access  Public
 exports.login = async (req, res, next) => {
   try {
+    console.log('Login attempt:', req.body);
     const { email, password } = req.body;
 
     // Validate email & password
     if (!email || !password) {
+      console.log('Missing email or password');
       return res.status(400).json({
         success: false,
         error: 'Please provide an email and password'
@@ -81,28 +83,37 @@ exports.login = async (req, res, next) => {
     }
 
     // Check for user
+    console.log('Looking for user with email:', email);
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
+      console.log('User not found');
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials'
       });
     }
 
+    console.log('User found:', user.name, user.role);
+
     // Check if password matches
+    console.log('Checking password...');
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
+      console.log('Password does not match');
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials'
       });
     }
+
+    console.log('Password matches, generating token...');
 
     // Send token response
     sendTokenResponse(user, 200, res);
   } catch (err) {
+    console.error('Login error:', err);
     next(err);
   }
 };
@@ -221,7 +232,7 @@ exports.resetPassword = async (req, res, next) => {
 exports.getMe = async (req, res, next) => {
   try {
     let user;
-    
+
     // Check user type and populate relevant fields
     if (req.user.role === 'client') {
       user = await Client.findById(req.user.id).populate('projects');
@@ -302,7 +313,9 @@ exports.logout = async (req, res, next) => {
 // Helper function to get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res, additionalData = {}) => {
   // Create token
+  console.log('Generating JWT token for user:', user._id);
   const token = user.getSignedJwtToken();
+  console.log('Token generated successfully');
 
   const options = {
     expires: new Date(
@@ -315,9 +328,28 @@ const sendTokenResponse = (user, statusCode, res, additionalData = {}) => {
     options.secure = true;
   }
 
+  // Create user object with token
+  const userData = {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    token
+  };
+
+  console.log('Sending response with user data:', {
+    _id: userData._id,
+    name: userData.name,
+    email: userData.email,
+    role: userData.role,
+    tokenExists: !!userData.token
+  });
+
   res.status(statusCode).json({
     success: true,
-    token,
+    data: userData,
     ...additionalData
   });
+
+  console.log('Response sent successfully');
 };

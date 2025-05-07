@@ -6,7 +6,7 @@ npm run dev &
 
 # Start the admin panel
 cd ../skillswap-admin
-npm start &
+npm run dev &
 
 # Wait for both processes
 wait

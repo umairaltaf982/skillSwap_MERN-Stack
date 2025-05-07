@@ -23,7 +23,7 @@ const httpServer = createServer(app);
 // Initialize Socket.io
 const io = new Server(httpServer, {
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:5173'], // Add Vite's default port
+    origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:4000'], // Add all frontend ports
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   },
@@ -57,7 +57,7 @@ io.use(async (socket, next) => {
 // Middleware
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'], // Add Vite's default port
+    origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:4000'], // Add all frontend ports
     credentials: true,
   })
 );

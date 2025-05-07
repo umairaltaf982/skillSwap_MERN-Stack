@@ -15,11 +15,14 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('Login component - isAuthenticated changed:', isAuthenticated);
     if (isAuthenticated) {
+      console.log('Login component - navigating to dashboard');
       navigate('/dashboard');
     }
 
     if (error) {
+      console.log('Login component - showing error:', error);
       setShowAlert(true);
     }
 
@@ -34,7 +37,14 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    await login(formData.email, formData.password);
+    console.log('Login component - submitting form with email:', formData.email);
+    try {
+      await login(formData.email, formData.password);
+      console.log('Login component - login function completed');
+      console.log('Login component - isAuthenticated after login:', isAuthenticated);
+    } catch (err) {
+      console.error('Login component - error during login:', err);
+    }
   };
 
   return (

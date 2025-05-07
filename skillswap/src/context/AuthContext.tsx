@@ -81,17 +81,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const res = await api.post('/auth/login', { email, password });
       console.log('Login response:', res.data);
 
-      if (res.data.token) {
+      console.log('Full login response structure:', JSON.stringify(res.data, null, 2));
+
+      // Check for token in the response (could be in different locations)
+      if (res.data.data && res.data.data.token) {
+        console.log('Token found in response.data.data');
+        setToken(res.data.data.token);
+        setAuthToken(res.data.data.token);
+
+        // Set user data directly from the response
+        setUser(res.data.data);
+        setIsAuthenticated(true);
+      } else if (res.data.token) {
+        console.log('Token found in response.data');
         setToken(res.data.token);
         setAuthToken(res.data.token);
+
+        // If user data is in a different location
+        const userData = res.data.user || res.data;
+        setUser(userData);
+        setIsAuthenticated(true);
       } else {
         console.error('No token received from server');
+        console.error('Response structure:', res.data);
         setError('Authentication failed: No token received');
       }
       setLoading(false);
     } catch (err: any) {
-      console.error('Login error:', err.response?.data || err.message);
-      setError(err.response?.data?.error || 'An error occurred during login');
+      console.error('Login error:', err);
+      console.error('Error details:', {
+        message: err.message,
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data,
+        config: {
+          url: err.config?.url,
+          method: err.config?.method,
+          baseURL: err.config?.baseURL,
+          headers: err.config?.headers
+        }
+      });
+      setError(err.response?.data?.error || err.message || 'An error occurred during login');
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
@@ -111,11 +141,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const res = await api.post('/auth/register', userData);
       console.log('Registration response:', res.data);
 
-      if (res.data.token) {
+      console.log('Full registration response structure:', JSON.stringify(res.data, null, 2));
+
+      // Check for token in the response (could be in different locations)
+      if (res.data.data && res.data.data.token) {
+        console.log('Token found in response.data.data');
+        setToken(res.data.data.token);
+        setAuthToken(res.data.data.token);
+
+        // Set user data directly from the response
+        setUser(res.data.data);
+        setIsAuthenticated(true);
+      } else if (res.data.token) {
+        console.log('Token found in response.data');
         setToken(res.data.token);
         setAuthToken(res.data.token);
+
+        // If user data is in a different location
+        const userData = res.data.user || res.data;
+        setUser(userData);
+        setIsAuthenticated(true);
       } else {
         console.error('No token received from server');
+        console.error('Response structure:', res.data);
         setError('Registration failed: No token received');
       }
       setLoading(false);
